@@ -37,7 +37,6 @@ NetworkService *NetworkService::NetworkService_ = nullptr;
 
 NetworkService *NetworkService::GetInstance(WiFiClass &WiFi)
 {
-
     if (NetworkService_ == nullptr)
     {
         NetworkService_ = new NetworkService(WiFi);

@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include <PubSubClient.h>
 #include <esp_wifi.h>
+#include "ArduinoJson.h"
+#include "./Models/OffSetModel.h"
 
 // mqtt constants
 WiFiClient wifiClient;
@@ -30,7 +32,7 @@ public:
     MessageService(char *broker, int port, char *mqttuse, char *mqttpass);
     ~MessageService();
     void Connect(char *subscribeTopic, char *alertTopic, char *operationTopic);
-    void (*callbackMessage)(String message);
+    void (*callbackMessage)(OffSetModel offset);
     MessageService(MessageService &other) = delete;
     void operator=(const MessageService &) = delete;
     static MessageService *GetInstance();
@@ -51,14 +53,24 @@ MessageService::~MessageService()
 }
 void callback(char *topic, byte *payload, unsigned int length)
 {
-
+    OffSetModel offset;
     String messageTemp;
     for (int i = 0; i < length; i++)
     {
         messageTemp += (char)payload[i];
     }
-    Serial.println(messageTemp);
-    MessageService::GetInstance()->callbackMessage(messageTemp);
+    //Serial.println(messageTemp);
+    
+    DynamicJsonDocument doc(1024);                         //Memory pool
+    auto error = deserializeJson(doc, payload);
+    if (error) {
+        Serial.print(F("deserializeJson() failed with code "));
+        Serial.println(error.c_str());
+        return;
+    }
+    offset.Temperature =  doc["Temperature"];
+    offset.OffSet = doc["OffSet"];
+    MessageService::GetInstance()->callbackMessage(offset);
 }
 MessageService::MessageService(char *broker, int port, char *mqttuser, char *mqttpass)
 {

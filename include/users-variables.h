@@ -9,6 +9,6 @@ char broker[] = "192.168.1.11";
 int port = 1883;
 char mqttuser[] = "ajch";        //add eventual mqtt username
 char mqttpass[] = "Master@db9$"; //add eventual mqtt password
-char subscribeTopic[] = "esp/test";
+char subscribeTopic[] = "Smoker_Automate_subscribeTopic";
 char alertTopic[] = "Smoker_Automate_alertTopic";
 char operationTopic[] = "Smoker_Automate_operationTopic";
