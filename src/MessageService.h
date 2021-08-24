@@ -70,6 +70,8 @@ void callback(char *topic, byte *payload, unsigned int length)
     }
     offset.Temperature =  doc["Temperature"];
     offset.OffSet = doc["OffSet"];
+    offset.Tolerance = doc["Tolerance"];
+    offset.NaturalFlow = doc["NaturalFlow"];
     MessageService::GetInstance()->callbackMessage(offset);
 }
 MessageService::MessageService(char *broker, int port, char *mqttuser, char *mqttpass)

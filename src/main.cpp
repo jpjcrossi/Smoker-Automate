@@ -36,12 +36,25 @@ void ReadTemperature(void *pvParameters)
   }
 }
 
+void MinutDelay(int minuts)
+{
+  unsigned long Millis = minuts * 60000;
+  while (Millis > 0)
+  {
+    delay(1000);
+    Millis-=1000;
+  }
+}
+
 void PIDController(void *pvParameters)
 {
   double PIDResult = 0;
   int vpwm = 0;
+  double Tolerance=0;
   while (true)
   {
+    Tolerance = OffSet.Tolerance/100;
+
     pid.setSetPoint(OffSet.OffSet);
     pid.addNewSample(OffSet.Temperature);
     PIDResult = pid.process();
@@ -57,9 +70,16 @@ void PIDController(void *pvParameters)
 
     Serial.print("PID:");
     Serial.println(PIDResult);
-    if (PIDResult > -4 &&  PIDResult < 4)
+
+    Serial.print("NaturalFlow:");
+    Serial.println(OffSet.NaturalFlow);
+
+    Serial.print("Tolerance:");
+    Serial.println(Tolerance);
+
+    if (PIDResult * (1-Tolerance) > -4 &&  PIDResult * (1+Tolerance) < 4)
     {
-      vpwm = 40;
+      vpwm = OffSet.NaturalFlow;
     }
     else if (PIDResult < 0)
     {
@@ -67,17 +87,19 @@ void PIDController(void *pvParameters)
     }
     else
     {
-      vpwm = PIDResult + 50;
+      vpwm = PIDResult + OffSet.NaturalFlow;
     }
 
     Serial.print("PWM:");
     Serial.println(vpwm);
 
     pwm.SetDutyCycle(vpwm);
-
-    delay(5000);
+  //  MinutDelay(1);
+  //  MinutDelay(2);
+    delay(500);
   }
 }
+
 
 void MessagesHandle(void *OffSetModel)
 {
