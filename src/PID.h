@@ -5,11 +5,9 @@ private:
     double sample;
     double setPoint;
     double error;
-
     double lastSample;
     double P, I, D;
     double pid;
-
     long lastProcess;
 
 public:

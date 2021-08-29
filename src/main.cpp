@@ -14,7 +14,7 @@ static uint8_t taskCoreOne = 1;
 NetworkService networkService(WiFi);
 MessageService messageService(broker, port, mqttuser, mqttpass);
 PID pid(1.0, 0, 0);
-PWM pwm(16, 17, 21, 22);
+PWM pwm(22, 21, 17);
 OffSetModel OffSet;
 
 void ReadTemperature(void *pvParameters)
@@ -58,8 +58,6 @@ void PIDController(void *pvParameters)
     pid.setSetPoint(OffSet.OffSet);
     pid.addNewSample(OffSet.Temperature);
     PIDResult = pid.process();
-    //Serial.println(PIDResult);
-    //Serial.println(OffSet.Temperature);
 
     Serial.println("------------------------------------------------------------------------------------");
     Serial.print("OffSet:");
@@ -94,8 +92,6 @@ void PIDController(void *pvParameters)
     Serial.println(vpwm);
 
     pwm.SetDutyCycle(vpwm);
-  //  MinutDelay(1);
-  //  MinutDelay(2);
     delay(500);
   }
 }

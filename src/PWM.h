@@ -1,48 +1,58 @@
+#include "Arduino.h"
 class PWM
 {
 private:
-    int _motor1Pin1;
-    int _motor1Pin2;
-    int _enable1Pin;
-    int _enable2Pin;
+    int _motorPin1;
+    int _motorPin2;
+    int _enablePin;
     int _dutyCycle;
 
-    const int freq = 30000;
-    const int pwmChannel = 0;
-    const int resolution = 8;
+
+    const int _freq = 30000;
+    const int _pwmChannel = 0;
+    const int _resolution = 8;
+    const int _bits = pow(2,_resolution); 
+
 
 public:
-    PWM(int motor1Pin1, int motor1Pin2, int enable1Pin, int enable2Pin);
+    PWM(int motorPin1, int motorPin2, int enablePin);
     ~PWM();
-    void SetDutyCycle(int dutyCycle){
-            _dutyCycle = dutyCycle;
-     digitalWrite(_enable2Pin, 1);
-     digitalWrite(_motor1Pin1, HIGH);
-     digitalWrite(_motor1Pin2, LOW);
-     ledcWrite(pwmChannel, dutyCycle);
+    void SetDutyCycle(int dutyCycle)
+    {
+
+        int toPWM =   map(dutyCycle, 0,100,0,255);
+
+        uint32_t duty = (this->_bits / 255) * min(toPWM, 255);
+        digitalWrite(_enablePin, LOW);// see page 7 of datasheet. You must keep ENABLE pin low before applying changes to IN			
+        digitalWrite(_motorPin1, LOW);
+        digitalWrite(_motorPin2, HIGH);
+
+        _dutyCycle = dutyCycle;
+        ledcWrite(_pwmChannel, duty);
     };
 };
 
-PWM::PWM(int motor1Pin1, int motor1Pin2, int enable1Pin, int enable2Pin)
+PWM::PWM(int motorPin1, int motorPin2, int enablePin)
 {
-    _motor1Pin1 = motor1Pin1;
-    _motor1Pin2 = motor1Pin2;
-    _enable1Pin = enable1Pin;
-    _enable2Pin = enable2Pin;
+    _motorPin1 = motorPin1;
+    _motorPin2 = motorPin2;
+    _enablePin = enablePin;
+    
 
     // sets the pins as outputs:
-    pinMode(_motor1Pin1, OUTPUT);
-    pinMode(_motor1Pin2, OUTPUT);
-    pinMode(_enable1Pin, OUTPUT);
-    pinMode(_enable2Pin, OUTPUT);
+    pinMode(_motorPin1, OUTPUT);
+    pinMode(_motorPin2, OUTPUT);
+    pinMode(_enablePin, OUTPUT);
 
     // configure LED PWM functionalitites
-    ledcSetup(pwmChannel, freq, resolution);
+    ledcSetup(_pwmChannel, _freq, _resolution);
 
     // attach the channel to the GPIO to be controlled
-    ledcAttachPin(enable1Pin, pwmChannel);
+    ledcAttachPin(_enablePin, _pwmChannel);
+ 
+    digitalWrite(_motorPin1, HIGH);
+    digitalWrite(_motorPin2, LOW); 
 }
-
 
 PWM::~PWM()
 {
