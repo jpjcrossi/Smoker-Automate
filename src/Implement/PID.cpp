@@ -1,30 +1,4 @@
-class PID
-{
-private:
-    double kP, kI, kD;
-    double sample;
-    double setPoint;
-    double error;
-    double lastSample;
-    double P, I, D;
-    double pid;
-    long lastProcess;
-
-public:
-    PID(double _kP, double _kI, double _kD);
-    ~PID();
-    double process();
-
-    void addNewSample(double _sample)
-    {
-        sample = _sample;
-    }
-
-    void setSetPoint(double _setPoint)
-    {
-        setPoint = _setPoint;
-    }
-};
+#include "Headers/PID.h"
 
 PID::PID(double _kP, double _kI, double _kD)
 {
@@ -35,6 +9,16 @@ PID::PID(double _kP, double _kI, double _kD)
 
 PID::~PID()
 {
+}
+
+void PID::addNewSample(double _sample)
+{
+    sample = _sample;
+}
+
+void PID::setSetPoint(double _setPoint)
+{
+    setPoint = _setPoint;
 }
 
 double PID::process()

@@ -1,39 +1,20 @@
+#include "Headers/NetworkService.h"
 
-#include <WiFi.h>
-#include <Arduino.h>
-
-class NetworkService
-{
-protected:
-    static NetworkService *NetworkService_;
-    WiFiClass _WiFi;
-
-private:
-    char *_ssid;
-    char *_password;
-
-
-public:
-    NetworkService(WiFiClass WiFi) 
-    {
-        this->_WiFi = WiFi;
-    }
-    ~NetworkService(){};
-    NetworkService(NetworkService &other) = delete;
-    void operator=(const NetworkService &) = delete;
-    static NetworkService *GetInstance(WiFiClass &WiFi);
-    static NetworkService *GetInstance();
-    void Connect(char *ssid, char *password);    
-    void Reconnect()
-    {
-        _WiFi.reconnect();
-    }
-    IPAddress LocalIP()
-    {
-        return _WiFi.localIP();
-    }
-};
 NetworkService *NetworkService::NetworkService_ = nullptr;
+
+NetworkService::NetworkService(WiFiClass WiFi)
+{
+    this->_WiFi = WiFi;
+}
+
+void NetworkService::Reconnect()
+{
+    _WiFi.reconnect();
+}
+IPAddress NetworkService::LocalIP()
+{
+    return _WiFi.localIP();
+}
 
 NetworkService *NetworkService::GetInstance(WiFiClass &WiFi)
 {
