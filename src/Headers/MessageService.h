@@ -7,6 +7,7 @@
 #include <esp_wifi.h>
 #include <ArduinoJson.h>
 #include <Models/OffSetModel.h>
+#include <Models/FeedBackModel.h>
 
 class MessageService
 {
@@ -42,6 +43,8 @@ public:
     void operator=(const MessageService &) = delete;
 
     static MessageService *GetInstance();
+
+    void SendFeedBack(FeedBackModel feedBackModel);
 
     void Loop();
 };

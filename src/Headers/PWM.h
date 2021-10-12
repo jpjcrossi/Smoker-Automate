@@ -4,18 +4,18 @@
 class PWM
 {
 private:
-    int _motorPin1;
-    int _motorPin2;
-    int _enablePin;
+    int _fanPin1;
+    int _fanPin2;
+    int _fanEnablePin;
     int _dutyCycle;
 
-    const int _freq = 30000;
+    const int _freq = 80000;
     const int _pwmChannel = 0;
-    const int _resolution = 8;
+    const int _resolution = 10;
     const int _bits = pow(2, _resolution);
 
 public:
-    PWM(int motorPin1, int motorPin2, int enablePin);
+    PWM(int fanPin1, int fanPin2, int fanEnablePin);
     ~PWM();
     void SetDutyCycle(int dutyCycle);
 };

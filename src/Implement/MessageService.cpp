@@ -16,6 +16,7 @@ void MessageService::Loop()
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
+
     OffSetModel offset;
     String messageTemp;
     for (int i = 0; i < length; i++)
@@ -32,11 +33,11 @@ void callback(char *topic, byte *payload, unsigned int length)
         return;
     }
 
-     offset.Temperature = doc["Temperature"];
-     offset.OffSet = doc["OffSet"];
-     offset.Tolerance = doc["Tolerance"];
-     offset.NaturalFlow = doc["NaturalFlow"];
-      MessageService::GetInstance()->callbackMessage(offset);
+    offset.OffSet = doc["OffSet"];
+    offset.Tolerance = doc["Tolerance"];
+    offset.NaturalFlow = doc["NaturalFlow"];
+
+    MessageService::GetInstance()->callbackMessage(offset);
 }
 
 MessageService::MessageService(char *broker, int port, char *mqttuser, char *mqttpass)
@@ -55,7 +56,7 @@ void MessageService::Connect(char *subscribeTopic, char *alertTopic, char *opera
     _operationTopic = operationTopic;
 
     mqttClient.setServer(_broker, _port);
-        mqttClient.setCallback(callback);
+    mqttClient.setCallback(callback);
 
     while (!mqttClient.connected())
     {
@@ -72,7 +73,20 @@ void MessageService::Connect(char *subscribeTopic, char *alertTopic, char *opera
             delay(2000);
         }
     }
-    mqttClient.subscribe(subscribeTopic);
+
+    mqttClient.subscribe(_subscribeTopic);
+}
+
+void MessageService::SendFeedBack(FeedBackModel feedBackModel)
+{
+    char out[128];
+    StaticJsonDocument<256> doc;
+    doc["Temperature_Value"] = feedBackModel.Temperature_Value;
+    doc["Fan_Value"] = feedBackModel.Fan_Value;
+    doc["PWM_Value"] = feedBackModel.PWM_Value;
+    serializeJson(doc, out);
+
+    mqttClient.publish(_operationTopic, out);    
 }
 
 MessageService::~MessageService()

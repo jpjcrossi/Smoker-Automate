@@ -6,33 +6,33 @@ void PWM::SetDutyCycle(int dutyCycle)
     int toPWM = map(dutyCycle, 0, 100, 0, 255);
 
     uint32_t duty = (this->_bits / 255) * min(toPWM, 255);
-    digitalWrite(_enablePin, LOW); // see page 7 of datasheet. You must keep ENABLE pin low before applying changes to IN
-    digitalWrite(_motorPin1, LOW);
-    digitalWrite(_motorPin2, HIGH);
+    digitalWrite(_fanEnablePin, LOW); // see page 7 of datasheet. You must keep ENABLE pin low before applying changes to IN
+    digitalWrite(_fanPin1, LOW);
+    digitalWrite(_fanPin2, HIGH);
 
     _dutyCycle = dutyCycle;
     ledcWrite(_pwmChannel, duty);
 };
 
-PWM::PWM(int motorPin1, int motorPin2, int enablePin)
+PWM::PWM(int fanPin1, int fanPin2, int fanEnablePin)
 {
-    _motorPin1 = motorPin1;
-    _motorPin2 = motorPin2;
-    _enablePin = enablePin;
+    _fanPin1 = fanPin1;
+    _fanPin2 = fanPin2;
+    _fanEnablePin = fanEnablePin;
 
     // sets the pins as outputs:
-    pinMode(_motorPin1, OUTPUT);
-    pinMode(_motorPin2, OUTPUT);
-    pinMode(_enablePin, OUTPUT);
+    pinMode(_fanPin1, OUTPUT);
+    pinMode(_fanPin2, OUTPUT);
+    pinMode(_fanEnablePin, OUTPUT);
 
     // configure LED PWM functionalitites
     ledcSetup(_pwmChannel, _freq, _resolution);
 
     // attach the channel to the GPIO to be controlled
-    ledcAttachPin(_enablePin, _pwmChannel);
+    ledcAttachPin(_fanEnablePin, _pwmChannel);
 
-    digitalWrite(_motorPin1, HIGH);
-    digitalWrite(_motorPin2, LOW);
+    digitalWrite(_fanPin1, HIGH);
+    digitalWrite(_fanPin2, LOW);
 }
 
 PWM::~PWM()

@@ -1,4 +1,5 @@
 #include <WiFi.h>
+#include <max6675.h>
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include <freertos/FreeRTOS.h>
@@ -11,22 +12,32 @@
 #include <users-variables.h>
 
 #include <Models/OffSetModel.h>
+#include <Models/FeedBackModel.h>
 
 // Core number definitions
 static uint8_t taskCoreZero = 0;
-static uint8_t taskCoreOne = 1;
+//static uint8_t taskCoreOne = 1;
 NetworkService networkService(WiFi);
 MessageService messageService(broker, port, mqttuser, mqttpass);
+MAX6675 thermocouple(thermoCLK, thermoCS, thermoSO);
 
-PID pid(1.0, 0, 0);
-PWM pwm(22, 21, 17);
+PID pid(kP, kI, kD);
+PWM pwm(FanPin1, FanPin2, FanenablePin);
+
 OffSetModel OffSet;
+FeedBackModel feedBack;
 
 void ReadTemperature(void *pvParameters)
 {
   while (true)
   {
-    delay(1000);
+    delay(2000);
+    feedBack.Temperature_Value = (int)(thermocouple.readCelsius() + TemperatureOffSet);
+    Serial.println("------------------------------------------------------------------------------------");
+    Serial.print("Temperature_Value:");
+    Serial.println(feedBack.Temperature_Value);
+
+    messageService.SendFeedBack(feedBack);
   }
 }
 
@@ -50,7 +61,7 @@ void PIDController(void *pvParameters)
     Tolerance = OffSet.Tolerance / 100;
 
     pid.setSetPoint(OffSet.OffSet);
-    pid.addNewSample(OffSet.Temperature);
+    pid.addNewSample(feedBack.Temperature_Value);
     PIDResult = pid.process();
 
     Serial.println("------------------------------------------------------------------------------------");
@@ -58,7 +69,7 @@ void PIDController(void *pvParameters)
     Serial.println(OffSet.OffSet);
 
     Serial.print("Temperature:");
-    Serial.println(OffSet.Temperature);
+    Serial.println(feedBack.Temperature_Value);
 
     Serial.print("PID:");
     Serial.println(PIDResult);
@@ -68,7 +79,7 @@ void PIDController(void *pvParameters)
 
     Serial.print("Tolerance:");
     Serial.println(Tolerance);
-
+/*
     if (PIDResult * (1 - Tolerance) > -4 && PIDResult * (1 + Tolerance) < 4)
     {
       vpwm = OffSet.NaturalFlow;
@@ -81,6 +92,9 @@ void PIDController(void *pvParameters)
     {
       vpwm = PIDResult + OffSet.NaturalFlow;
     }
+*/
+    feedBack.PWM_Value = vpwm;
+    feedBack.Fan_Value = PIDResult;
 
     Serial.print("PWM:");
     Serial.println(vpwm);
@@ -98,25 +112,30 @@ void MessagesHandle(void *OffSetModel)
   }
 }
 
-void StartStopAction(void *pvParameters)
-{
-  while (true)
-  {
-  }
-}
-
 void getMessage(OffSetModel _OffSet)
 {
   OffSet = _OffSet;
+  Serial.println("------------------------------------------------------------------------------------");
+  Serial.print("OffSet:");
+  Serial.println(OffSet.OffSet);
+
+  Serial.print("NaturalFlow:");
+  Serial.println(OffSet.NaturalFlow);
+
+  Serial.print("Tolerance:");
+  Serial.println(OffSet.Tolerance);
+  Serial.println("------------------------------------------------------------------------------------");  
 }
 
 void setup()
 {
   Serial.begin(115200);
+  
   networkService.Connect(ssid, password);
-//  messageService.callbackMessage = getMessage;
+  messageService.callbackMessage = getMessage;  
   messageService.Connect(subscribeTopic, alertTopic, operationTopic);
-  pwm.SetDutyCycle(50);
+
+  pwm.SetDutyCycle(0);
 
   ArduinoOTA.setHostname("Smoker_Automate");
   ArduinoOTA.onStart([]()
@@ -160,38 +179,20 @@ void setup()
       taskCoreZero);
   delay(500); //Just give some time before the task starts
 
-  // xTaskCreatePinnedToCore(
-  //     PIDController,     /* Function  */
-  //     "readTemperature", /* Task name */
-  //     10000,             /* Number of words to be staked */
-  //     NULL,              /* Parameters (it could be NULL) */
-  //     2,                 /* Priority task number (0 a N) */
-  //     NULL,              /* task reference (it could be NULL) */
-  //     taskCoreZero);
-  // delay(500); //Just give some time before the task starts
-
-  // xTaskCreatePinnedToCore(
-  //     MessagesHandle,    /* Function  */
-  //     "readTemperature", /* Task name */
-  //     10000,             /* Number of words to be staked */
-  //     NULL,              /* Parameters (it could be NULL) */
-  //     3,                 /* Priority task number (0 a N) */
-  //     NULL,              /* task reference (it could be NULL) */
-  //     taskCoreOne);
-  // delay(500); //Just give some time before the task starts
-
-  // xTaskCreatePinnedToCore(
-  //     StartStopAction,   /* Function  */
-  //     "readTemperature", /* Task name */
-  //     10000,             /* Number of words to be staked */
-  //     NULL,              /* Parameters (it could be NULL) */
-  //     1,                 /* Priority task number (0 a N) */
-  //     NULL,              /* task reference (it could be NULL) */
-  //     taskCoreOne);
-  // delay(500); //Just give some time before the task starts
+   xTaskCreatePinnedToCore(
+       PIDController,     /* Function  */
+       "readTemperature", /* Task name */
+       10000,             /* Number of words to be staked */
+       NULL,              /* Parameters (it could be NULL) */
+       2,                 /* Priority task number (0 a N) */
+       NULL,              /* task reference (it could be NULL) */
+       taskCoreZero);
+   delay(500); //Just give some time before the task starts
 }
 
 void loop()
 {
   ArduinoOTA.handle();
+  messageService.Loop();
+ // pwm.SetDutyCycle(100);
 }
