@@ -63,6 +63,7 @@ void NetworkService::Connect(char *ssid, char *password)
     this->_WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
 
     this->_WiFi.begin(_ssid, _password);
+    this->_WiFi.setAutoConnect(true);
 
     Serial.println();
     Serial.println();
