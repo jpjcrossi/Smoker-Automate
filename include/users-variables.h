@@ -1,4 +1,4 @@
-n#include <Arduino.h>
+#include <Arduino.h>
 // NetWork Connection
 char *ssid = (char *)"ROSSIWRL"; // no need to fill in
 char *password = (char *)"Master@db9$";
@@ -34,7 +34,7 @@ SO        ->         IO19
 int FanPin1 = 21;               
 int FanPin2 = 22;
 int FanenablePin = 17;
-double FanOffSet = 0;
+double FanOffSet = 45;
 /*
 L298N          ESP32 D1 Mini
 --------      -------------
@@ -48,3 +48,10 @@ Input2    ->         IO22
 double kP = 1.0;
 double kI = 0.0;
 double kD = 0.0;
+
+
+enum SmokerState {
+  ReleasedToFix,
+  ApplingCorrection,
+  Stabilizing
+};

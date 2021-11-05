@@ -16,7 +16,7 @@
 
 // Core number definitions
 static uint8_t taskCoreZero = 0;
-//static uint8_t taskCoreOne = 1;
+static uint8_t taskCoreOne = 1;
 NetworkService networkService(WiFi);
 MessageService messageService(broker, port, mqttuser, mqttpass);
 MAX6675 thermocouple(thermoCLK, thermoCS, thermoSO);
@@ -26,6 +26,7 @@ PWM pwm(FanPin1, FanPin2, FanenablePin);
 
 OffSetModel OffSet;
 FeedBackModel feedBack;
+SmokerState smokerState = ReleasedToFix;
 
 void ReadTemperature(void *pvParameters)
 {
@@ -36,6 +37,19 @@ void ReadTemperature(void *pvParameters)
     Serial.println("------------------------------------------------------------------------------------");
     Serial.print("Temperature_Value:");
     Serial.println(feedBack.Temperature_Value);
+
+    if (smokerState == ReleasedToFix)
+    {
+      feedBack.State_Value = "Pronto para corrigir";
+    }
+    else if (smokerState == ApplingCorrection)
+    {
+      feedBack.State_Value = "Aplicando Correção";
+    }
+    else if (smokerState == Stabilizing)
+    {
+      feedBack.State_Value = "Aguardando Estabilizar";
+    }
 
     messageService.SendFeedBack(feedBack);
   }
@@ -51,14 +65,64 @@ void MinutDelay(int minuts)
   }
 }
 
+void StateController(void *pvParameters)
+{
+  int interationCount = 0;
+
+  while (true)
+  {
+    delay(1000);
+
+    if (smokerState == ReleasedToFix || (OffSet.TimeToCorrect + OffSet.TimeToStabilize == 0))
+    {
+      interationCount = 0;
+      continue;
+    }
+    else if (smokerState == ApplingCorrection)
+    {
+      interationCount++;
+      if (interationCount >= OffSet.TimeToCorrect)
+      {
+        interationCount = 0;
+        smokerState = Stabilizing;
+      }
+    }
+    else if (smokerState == Stabilizing)
+    {
+      interationCount++;
+      if (interationCount >= OffSet.TimeToStabilize)
+      {
+        interationCount = 0;
+        smokerState = ReleasedToFix;
+      }
+    }
+  }
+}
+
 void PIDController(void *pvParameters)
 {
   double PIDResult = 0;
-  int vpwm = 0;
+  int PWM = 0;
   double Tolerance = 0;
+  double Variance = 0;
   while (true)
   {
-    Tolerance = OffSet.Tolerance / 100;
+
+    if (smokerState == ApplingCorrection)
+    {
+      delay(500);
+      continue;
+    }
+
+    if (feedBack.Temperature_Value < OffSet.MinValue || smokerState == Stabilizing)
+    {
+      pwm.SetDutyCycle(0);
+      delay(500);
+      feedBack.PWM_Value = 0;
+      continue;
+    }
+
+    Tolerance = OffSet.Tolerance;
 
     pid.setSetPoint(OffSet.OffSet);
     pid.addNewSample(feedBack.Temperature_Value);
@@ -74,32 +138,36 @@ void PIDController(void *pvParameters)
     Serial.print("PID:");
     Serial.println(PIDResult);
 
-    Serial.print("NaturalFlow:");
-    Serial.println(OffSet.NaturalFlow);
+    Serial.print("MinValue:");
+    Serial.println(OffSet.MinValue);
 
     Serial.print("Tolerance:");
     Serial.println(Tolerance);
-/*
-    if (PIDResult * (1 - Tolerance) > -4 && PIDResult * (1 + Tolerance) < 4)
+
+    if (PIDResult <= 0)
     {
-      vpwm = OffSet.NaturalFlow;
-    }
-    else if (PIDResult < 0)
-    {
-      vpwm = 0;
+      PWM = 0;
     }
     else
     {
-      vpwm = PIDResult + OffSet.NaturalFlow;
+      Variance = OffSet.OffSet - feedBack.Temperature_Value;
+      if (Variance <= Tolerance)
+      {
+        PWM = 0;
+      }
+      else
+      {
+        PWM = FanOffSet + PIDResult;
+        smokerState = ApplingCorrection;
+      }
     }
-*/
-    feedBack.PWM_Value = vpwm;
-    feedBack.Fan_Value = PIDResult;
+
+    feedBack.PWM_Value = PWM;
 
     Serial.print("PWM:");
-    Serial.println(vpwm);
+    Serial.println(PWM);
 
-    pwm.SetDutyCycle(vpwm);
+    pwm.SetDutyCycle(PWM);
     delay(500);
   }
 }
@@ -119,20 +187,20 @@ void getMessage(OffSetModel _OffSet)
   Serial.print("OffSet:");
   Serial.println(OffSet.OffSet);
 
-  Serial.print("NaturalFlow:");
-  Serial.println(OffSet.NaturalFlow);
+  Serial.print("MinValue:");
+  Serial.println(OffSet.MinValue);
 
   Serial.print("Tolerance:");
   Serial.println(OffSet.Tolerance);
-  Serial.println("------------------------------------------------------------------------------------");  
+  Serial.println("------------------------------------------------------------------------------------");
 }
 
 void setup()
 {
   Serial.begin(115200);
-  
+
   networkService.Connect(ssid, password);
-  messageService.callbackMessage = getMessage;  
+  messageService.callbackMessage = getMessage;
   messageService.Connect(subscribeTopic, alertTopic, operationTopic);
 
   pwm.SetDutyCycle(0);
@@ -179,20 +247,29 @@ void setup()
       taskCoreZero);
   delay(500); //Just give some time before the task starts
 
-   xTaskCreatePinnedToCore(
-       PIDController,     /* Function  */
-       "readTemperature", /* Task name */
-       10000,             /* Number of words to be staked */
-       NULL,              /* Parameters (it could be NULL) */
-       2,                 /* Priority task number (0 a N) */
-       NULL,              /* task reference (it could be NULL) */
-       taskCoreZero);
-   delay(500); //Just give some time before the task starts
+  xTaskCreatePinnedToCore(
+      PIDController,   /* Function  */
+      "PIDController", /* Task name */
+      10000,           /* Number of words to be staked */
+      NULL,            /* Parameters (it could be NULL) */
+      2,               /* Priority task number (0 a N) */
+      NULL,            /* task reference (it could be NULL) */
+      taskCoreZero);
+  delay(500); //Just give some time before the task starts
+
+  xTaskCreatePinnedToCore(
+      StateController,  /* Function  */
+      "StepController", /* Task name */
+      10000,            /* Number of words to be staked */
+      NULL,             /* Parameters (it could be NULL) */
+      1,                /* Priority task number (0 a N) */
+      NULL,             /* task reference (it could be NULL) */
+      taskCoreOne);
+  delay(500); //Just give some time before the task starts
 }
 
 void loop()
 {
   ArduinoOTA.handle();
   messageService.Loop();
- // pwm.SetDutyCycle(100);
 }

@@ -35,7 +35,9 @@ void callback(char *topic, byte *payload, unsigned int length)
 
     offset.OffSet = doc["OffSet"];
     offset.Tolerance = doc["Tolerance"];
-    offset.NaturalFlow = doc["NaturalFlow"];
+    offset.MinValue = doc["MinValue"];
+    offset.TimeToCorrect = doc["TimeToCorrect"];
+    offset.TimeToStabilize = doc["TimeToStabilize"];
 
     MessageService::GetInstance()->callbackMessage(offset);
 }
@@ -82,7 +84,7 @@ void MessageService::SendFeedBack(FeedBackModel feedBackModel)
     char out[128];
     StaticJsonDocument<256> doc;
     doc["Temperature_Value"] = feedBackModel.Temperature_Value;
-    doc["Fan_Value"] = feedBackModel.Fan_Value;
+    doc["State_Value"] = feedBackModel.State_Value;
     doc["PWM_Value"] = feedBackModel.PWM_Value;
     serializeJson(doc, out);
 
