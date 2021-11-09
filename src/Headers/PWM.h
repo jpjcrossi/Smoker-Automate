@@ -9,9 +9,9 @@ private:
     int _fanEnablePin;
     int _dutyCycle;
 
-    const int _freq = 80000;
+    const int _freq = 5000;
     const int _pwmChannel = 0;
-    const int _resolution = 10;
+    const int _resolution =10;
     const int _bits = pow(2, _resolution);
 
 public:

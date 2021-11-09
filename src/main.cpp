@@ -162,6 +162,9 @@ void PIDController(void *pvParameters)
       }
     }
 
+    if (PWM > 100)
+      PWM = 100;
+
     feedBack.PWM_Value = PWM;
 
     Serial.print("PWM:");
@@ -272,4 +275,5 @@ void loop()
 {
   ArduinoOTA.handle();
   messageService.Loop();
+
 }
