@@ -41,8 +41,8 @@ double FanOffSet = 30;
 L298N          ESP32 D1 Mini
 --------      -------------
 Enable1   ->         IO17
-Input1    ->         IO21
-Input2    ->         IO22
+Input1    ->         IO00
+Input2    ->         IO04
 */
 
 

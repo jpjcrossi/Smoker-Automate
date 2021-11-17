@@ -114,11 +114,11 @@ void PIDController(void *pvParameters)
       continue;
     }
 
-    if (feedBack.Temperature_Value < OffSet.MinValue || smokerState == Stabilizing)
+    if ((feedBack.Temperature_Value < OffSet.MinValue) || (smokerState == Stabilizing) || (OffSet.MinValue == 0))
     {
-      pwm.SetDutyCycle(0);
-      delay(500);
       feedBack.PWM_Value = 0;
+      pwm.SetDutyCycle(feedBack.PWM_Value);
+      delay(500);
       continue;
     }
 
@@ -275,5 +275,4 @@ void loop()
 {
   ArduinoOTA.handle();
   messageService.Loop();
-
 }
