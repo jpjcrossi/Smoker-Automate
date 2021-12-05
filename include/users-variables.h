@@ -36,7 +36,7 @@ SO        ->         IO19
 int FanPin1 = 00;               
 int FanPin2 = 04;
 int FanenablePin = 17;
-double FanOffSet = 30;
+double FanOffSet = 40;
 /*
 L298N          ESP32 D1 Mini
 --------      -------------
