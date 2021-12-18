@@ -30,6 +30,7 @@ SmokerState smokerState = ReleasedToFix;
 
 void ReadTemperature(void *pvParameters)
 {
+
   while (true)
   {
     delay(2000);
@@ -127,7 +128,7 @@ void PIDController(void *pvParameters)
     pid.setSetPoint(OffSet.OffSet);
     pid.addNewSample(feedBack.Temperature_Value);
     PIDResult = pid.process();
-
+/*
     Serial.println("------------------------------------------------------------------------------------");
     Serial.print("OffSet:");
     Serial.println(OffSet.OffSet);
@@ -143,7 +144,7 @@ void PIDController(void *pvParameters)
 
     Serial.print("Tolerance:");
     Serial.println(Tolerance);
-
+*/
     if (PIDResult <= 0)
     {
       PWM = 0;
@@ -167,10 +168,10 @@ void PIDController(void *pvParameters)
 
     feedBack.PWM_Value = PWM;
 
-    Serial.print("PWM:");
-    Serial.println(PWM);
+    //Serial.print("PWM:");
+    //Serial.println(PWM);
 
-    pwm.SetDutyCycle(PWM);
+    //pwm.SetDutyCycle(feedBack.PWM_Value);
     delay(500);
   }
 }
@@ -186,6 +187,7 @@ void MessagesHandle(void *OffSetModel)
 void getMessage(OffSetModel _OffSet)
 {
   OffSet = _OffSet;
+  /*
   Serial.println("------------------------------------------------------------------------------------");
   Serial.print("OffSet:");
   Serial.println(OffSet.OffSet);
@@ -196,6 +198,7 @@ void getMessage(OffSetModel _OffSet)
   Serial.print("Tolerance:");
   Serial.println(OffSet.Tolerance);
   Serial.println("------------------------------------------------------------------------------------");
+  */
 }
 
 void setup()
@@ -245,7 +248,7 @@ void setup()
       "readTemperature", /* Task name */
       10000,             /* Number of words to be staked */
       NULL,              /* Parameters (it could be NULL) */
-      1,                 /* Priority task number (0 a N) */
+      2,                 /* Priority task number (0 a N) */
       NULL,              /* task reference (it could be NULL) */
       taskCoreZero);
   delay(500); //Just give some time before the task starts
@@ -275,4 +278,5 @@ void loop()
 {
   ArduinoOTA.handle();
   messageService.Loop();
+  pwm.SetDutyCycle(feedBack.PWM_Value);
 }

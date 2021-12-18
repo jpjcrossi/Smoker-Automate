@@ -88,7 +88,7 @@ void MessageService::SendFeedBack(FeedBackModel feedBackModel)
     doc["PWM_Value"] = feedBackModel.PWM_Value;
     serializeJson(doc, out);
 
-    mqttClient.publish(_operationTopic, out);    
+    mqttClient.publish(_operationTopic, out);
 }
 
 MessageService::~MessageService()

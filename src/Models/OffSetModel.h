@@ -9,5 +9,5 @@ public:
     double Tolerance = 0;
     double MinValue = 0;
     int TimeToCorrect = 0;
-    int TimeToStabilize =0;
+    int TimeToStabilize = 0;
 };
