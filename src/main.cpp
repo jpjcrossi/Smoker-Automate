@@ -30,11 +30,17 @@ SmokerState smokerState = ReleasedToFix;
 
 void ReadTemperature(void *pvParameters)
 {
-
+  double Temperature = 0;
   while (true)
   {
     delay(2000);
-    feedBack.Temperature_Value = (int)(thermocouple.readCelsius() + TemperatureOffSet);
+    Temperature =  (int)(thermocouple.readCelsius() + TemperatureOffSet);
+    if(Temperature > 200)
+    {
+      continue;
+    }
+   
+    feedBack.Temperature_Value = Temperature;
     Serial.println("------------------------------------------------------------------------------------");
     Serial.print("Temperature_Value:");
     Serial.println(feedBack.Temperature_Value);
@@ -279,4 +285,5 @@ void loop()
   ArduinoOTA.handle();
   messageService.Loop();
   pwm.SetDutyCycle(feedBack.PWM_Value);
+  //pwm.SetDutyCycle(FanOffSet);
 }
