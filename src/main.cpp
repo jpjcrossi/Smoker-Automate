@@ -30,17 +30,16 @@ SmokerState smokerState = ReleasedToFix;
 
 void ReadTemperature(void *pvParameters)
 {
-  double Temperature = 0;
+  int Temperature = 0;
   while (true)
   {
     delay(2000);
     Temperature =  (int)(thermocouple.readCelsius() + TemperatureOffSet);
-    if(Temperature > 200)
+    if(Temperature <= 200)
     {
-      continue;
+        feedBack.Temperature_Value = Temperature;
     }
    
-    feedBack.Temperature_Value = Temperature;
     Serial.println("------------------------------------------------------------------------------------");
     Serial.print("Temperature_Value:");
     Serial.println(feedBack.Temperature_Value);
