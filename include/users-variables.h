@@ -47,9 +47,9 @@ Input2    ->         IO04
 
 
 // PID
-double kP = 1.0;
-double kI = 0.0;
-double kD = 0.0;
+double kP = 2.0;
+double kI = 0.2;
+double kD = 0.2;
 
 
 enum SmokerState {

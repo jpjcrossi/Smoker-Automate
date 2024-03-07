@@ -34,12 +34,12 @@ void ReadTemperature(void *pvParameters)
   while (true)
   {
     delay(2000);
-    Temperature =  (int)(thermocouple.readCelsius() + TemperatureOffSet);
-    if(Temperature <= 200)
+    Temperature = (int)(thermocouple.readCelsius() + TemperatureOffSet);
+    if (Temperature <= 200)
     {
-        feedBack.Temperature_Value = Temperature;
+      feedBack.Temperature_Value = Temperature;
     }
-   
+
     Serial.println("------------------------------------------------------------------------------------");
     Serial.print("Temperature_Value:");
     Serial.println(feedBack.Temperature_Value);
@@ -133,23 +133,7 @@ void PIDController(void *pvParameters)
     pid.setSetPoint(OffSet.OffSet);
     pid.addNewSample(feedBack.Temperature_Value);
     PIDResult = pid.process();
-/*
-    Serial.println("------------------------------------------------------------------------------------");
-    Serial.print("OffSet:");
-    Serial.println(OffSet.OffSet);
 
-    Serial.print("Temperature:");
-    Serial.println(feedBack.Temperature_Value);
-
-    Serial.print("PID:");
-    Serial.println(PIDResult);
-
-    Serial.print("MinValue:");
-    Serial.println(OffSet.MinValue);
-
-    Serial.print("Tolerance:");
-    Serial.println(Tolerance);
-*/
     if (PIDResult <= 0)
     {
       PWM = 0;
@@ -173,10 +157,10 @@ void PIDController(void *pvParameters)
 
     feedBack.PWM_Value = PWM;
 
-    //Serial.print("PWM:");
-    //Serial.println(PWM);
+    // Serial.print("PWM:");
+    // Serial.println(PWM);
 
-    //pwm.SetDutyCycle(feedBack.PWM_Value);
+    // pwm.SetDutyCycle(feedBack.PWM_Value);
     delay(500);
   }
 }
@@ -206,6 +190,7 @@ void getMessage(OffSetModel _OffSet)
   */
 }
 
+unsigned long startTime;
 void setup()
 {
   Serial.begin(115200);
@@ -226,8 +211,7 @@ void setup()
                          type = "filesystem";
 
                        // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-                       Serial.println("Start updating " + type);
-                     });
+                       Serial.println("Start updating " + type); });
   ArduinoOTA.onEnd([]()
                    { Serial.println("\nEnd"); });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
@@ -244,8 +228,7 @@ void setup()
                        else if (error == OTA_RECEIVE_ERROR)
                          Serial.println("Receive Failed");
                        else if (error == OTA_END_ERROR)
-                         Serial.println("End Failed");
-                     });
+                         Serial.println("End Failed"); });
   ArduinoOTA.begin();
 
   xTaskCreatePinnedToCore(
@@ -256,7 +239,7 @@ void setup()
       2,                 /* Priority task number (0 a N) */
       NULL,              /* task reference (it could be NULL) */
       taskCoreZero);
-  delay(500); //Just give some time before the task starts
+  delay(500); // Just give some time before the task starts
 
   xTaskCreatePinnedToCore(
       PIDController,   /* Function  */
@@ -266,7 +249,7 @@ void setup()
       2,               /* Priority task number (0 a N) */
       NULL,            /* task reference (it could be NULL) */
       taskCoreZero);
-  delay(500); //Just give some time before the task starts
+  delay(500); // Just give some time before the task starts
 
   xTaskCreatePinnedToCore(
       StateController,  /* Function  */
@@ -276,13 +259,23 @@ void setup()
       1,                /* Priority task number (0 a N) */
       NULL,             /* task reference (it could be NULL) */
       taskCoreOne);
-  delay(500); //Just give some time before the task starts
+  delay(500); // Just give some time before the task starts
+
+  startTime = millis();
 }
+
 
 void loop()
 {
   ArduinoOTA.handle();
   messageService.Loop();
-  pwm.SetDutyCycle(feedBack.PWM_Value);
-  //pwm.SetDutyCycle(FanOffSet);
+
+  if (millis() - startTime < 2000)
+  {
+    pwm.SetDutyCycle(100);
+  }
+  else
+  {
+    pwm.SetDutyCycle(feedBack.PWM_Value);
+  }
 }

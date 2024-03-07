@@ -2,6 +2,7 @@
 
 void PWM::SetDutyCycle(int dutyCycle)
 {
+    // int toPWM = map(constrain(dutyCycle, 0, 100), 0, 100, 0, 255);
 
     int toPWM = map(dutyCycle, 0, 100, 0, 255);
 

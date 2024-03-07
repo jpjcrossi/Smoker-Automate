@@ -37,7 +37,7 @@ void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
 {
     Serial.println("Disconnected from WiFi access point");
     Serial.print("WiFi lost connection. Reason: ");
-    Serial.println(info.disconnected.reason);
+    Serial.println(info.wifi_sta_disconnected.reason);
     Serial.println("Trying to Reconnect");
     NetworkService::GetInstance()->Reconnect();
 }
@@ -58,9 +58,9 @@ void NetworkService::Connect(char *ssid, char *password)
 
     delay(1000);
 
-    this->_WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
-    this->_WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_STA_DISCONNECTED);
-    this->_WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
+  //  this->_WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
+  //  this->_WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_STA_DISCONNECTED);
+  //  this->_WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
 
     this->_WiFi.begin(_ssid, _password);
     this->_WiFi.setAutoConnect(true);
