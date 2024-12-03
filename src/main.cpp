@@ -31,9 +31,17 @@ SmokerState smokerState = ReleasedToFix;
 void ReadTemperature(void *pvParameters)
 {
   int Temperature = 0;
+  int countInt = 0;
   while (true)
   {
     delay(2000);
+
+    if(countInt == 0)
+    {
+      int32_t rssi = WiFi.RSSI();
+      feedBack.WiFiSignalStrength = map(constrain(rssi, -100, -50), -100, -50, 0, 100);
+    }
+
     Temperature = (int)(thermocouple.readCelsius() + TemperatureOffSet);
     if (Temperature <= 200)
     {
@@ -57,7 +65,13 @@ void ReadTemperature(void *pvParameters)
       feedBack.State_Value = "Aguardando Estabilizar";
     }
 
+
     messageService.SendFeedBack(feedBack);
+    countInt++;
+    if(countInt == 30)
+    {
+      countInt = 0;
+    }
   }
 }
 

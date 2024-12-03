@@ -86,6 +86,7 @@ void MessageService::SendFeedBack(FeedBackModel feedBackModel)
     doc["Temperature_Value"] = feedBackModel.Temperature_Value;
     doc["State_Value"] = feedBackModel.State_Value;
     doc["PWM_Value"] = feedBackModel.PWM_Value;
+    doc["WiFiSignalStrength"] = feedBackModel.WiFiSignalStrength;
     serializeJson(doc, out);
 
     mqttClient.publish(_operationTopic, out);

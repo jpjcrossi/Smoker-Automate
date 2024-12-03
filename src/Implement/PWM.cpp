@@ -2,9 +2,9 @@
 
 void PWM::SetDutyCycle(int dutyCycle)
 {
-    // int toPWM = map(constrain(dutyCycle, 0, 100), 0, 100, 0, 255);
+     int toPWM = map(constrain(dutyCycle, 0, 100), 0, 100, 0, 255);
 
-    int toPWM = map(dutyCycle, 0, 100, 0, 255);
+    //int toPWM = map(dutyCycle, 0, 100, 0, 255);
 
     uint32_t duty = (this->_bits / 255) * min(toPWM, 255);
     digitalWrite(_fanEnablePin, LOW); // see page 7 of datasheet. You must keep ENABLE pin low before applying changes to IN

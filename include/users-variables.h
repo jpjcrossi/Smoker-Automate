@@ -36,7 +36,7 @@ SO        ->         IO19
 int FanPin1 = 00;               
 int FanPin2 = 04;
 int FanenablePin = 17;
-double FanOffSet = 40;
+double FanOffSet = 48;
 /*
 L298N          ESP32 D1 Mini
 --------      -------------
@@ -47,9 +47,9 @@ Input2    ->         IO04
 
 
 // PID
-double kP = 2.0;
-double kI = 0.2;
-double kD = 0.2;
+double kP = 1.0;
+double kI = 0.0;
+double kD = 0.0;
 
 
 enum SmokerState {
