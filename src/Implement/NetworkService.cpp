@@ -50,22 +50,39 @@ void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 
 void NetworkService::Connect(char *ssid, char *password)
 {
-    _ssid = ssid;
+      _ssid = ssid;
     _password = password;
 
-    // delete old config
+    // Delete old config
     this->_WiFi.disconnect(true);
 
     delay(1000);
 
-  //  this->_WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
-  //  this->_WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_STA_DISCONNECTED);
-  //  this->_WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
-
+    // Start WiFi connection
     this->_WiFi.begin(_ssid, _password);
     this->_WiFi.setAutoConnect(true);
 
     Serial.println();
-    Serial.println();
-    Serial.println("Wait for WiFi... ");
+    Serial.println("Connecting to WiFi...");
+
+    // Wait for connection
+    int maxAttempts = 20; // Número máximo de tentativas
+    int attempts = 0;
+
+    while (this->_WiFi.status() != WL_CONNECTED && attempts < maxAttempts) {
+        delay(500);
+        Serial.print(".");
+        attempts++;
+    }
+
+    // Check if connected
+    if (this->_WiFi.status() == WL_CONNECTED) {
+        Serial.println();
+        Serial.println("WiFi connected!");
+        Serial.print("IP address: ");
+        Serial.println(this->_WiFi.localIP());
+    } else {
+        Serial.println();
+        Serial.println("Failed to connect to WiFi!");
+    }
 }
