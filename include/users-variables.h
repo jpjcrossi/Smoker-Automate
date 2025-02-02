@@ -53,7 +53,7 @@ double kD = 0.0;
 
 
 enum SmokerState {
-  ReleasedToFix,
-  ApplingCorrection,
-  Stabilizing
+    RELEASED_TO_FIX,
+    APPLYING_CORRECTION,
+    STABILIZING
 };
