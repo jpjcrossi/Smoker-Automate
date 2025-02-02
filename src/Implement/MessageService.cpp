@@ -53,30 +53,50 @@ MessageService::MessageService(char *broker, int port, char *mqttuser, char *mqt
 
 void MessageService::Connect(char *subscribeTopic, char *alertTopic, char *operationTopic)
 {
-    _subscribeTopic = subscribeTopic;
+   _subscribeTopic = subscribeTopic;
     _alertTopic = alertTopic;
     _operationTopic = operationTopic;
 
+    // Configura o servidor MQTT e o callback
     mqttClient.setServer(_broker, _port);
     mqttClient.setCallback(callback);
 
-    while (!mqttClient.connected())
-    {
-        Serial.println("Connecting to MQTT…");
-        String clientId = "ESP32Client -";
-        if (mqttClient.connect(clientId.c_str(), _mqttuser, _mqttpass))
-        {
+    // Tenta conectar ao broker MQTT
+    Serial.println("Connecting to MQTT...");
+
+    int maxAttempts = 5; // Número máximo de tentativas de conexão
+    int attempts = 0;
+
+    while (!mqttClient.connected() && attempts < maxAttempts) {
+        Serial.print("Attempting MQTT connection... ");
+
+        // Gera um clientId único
+        String clientId = "ESP32Client-" + String(random(0xffff), HEX);
+
+        // Tenta conectar
+        if (mqttClient.connect(clientId.c_str(), _mqttuser, _mqttpass)) {
             Serial.println("connected");
-        }
-        else
-        {
-            Serial.print("failed with state ");
+
+            // Inscreve nos tópicos após a conexão ser estabelecida
+            if (_subscribeTopic) {
+                mqttClient.subscribe(_subscribeTopic);
+                Serial.print("Subscribed to topic: ");
+                Serial.println(_subscribeTopic);
+            }
+        } else {
+            // Exibe o estado de falha e tenta novamente após um delay
+            Serial.print("failed, state: ");
             Serial.print(mqttClient.state());
+            Serial.println(" Retrying in 2 seconds...");
             delay(2000);
+            attempts++;
         }
     }
 
-    mqttClient.subscribe(_subscribeTopic);
+    // Verifica se a conexão foi bem-sucedida após as tentativas
+    if (!mqttClient.connected()) {
+        Serial.println("Failed to connect to MQTT broker after multiple attempts!");
+    }
 }
 
 void MessageService::SendFeedBack(FeedBackModel feedBackModel)
